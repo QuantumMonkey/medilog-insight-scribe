@@ -1,9 +1,27 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, LineChart, PieChart, FileText, Activity, Pill } from "lucide-react";
-import { ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Line, Pie, Cell, Legend } from 'recharts';
+import { BarChartIcon, LineChart as LineChartIcon, PieChart as PieChartIcon, FileText, Activity, Pill } from "lucide-react";
+import { 
+  ResponsiveContainer, 
+  BarChart, Bar, 
+  XAxis, YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  Line, 
+  LineChart,
+  PieChart, 
+  Pie, 
+  Cell, 
+  Legend 
+} from 'recharts';
 import { sampleMetrics, sampleMedications, sampleTimelineEvents } from '@/data/sampleData';
 import { Medication, HealthMetric } from '@/types/health';
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from "@/components/ui/chart";
 
 const Analytics = () => {
   // Medication adherence analysis
@@ -55,7 +73,9 @@ const Analytics = () => {
         {/* Medication Adherence Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center"><Pill className="mr-2 h-5 w-5" />Medication Adherence</CardTitle>
+            <CardTitle className="text-lg flex items-center">
+              <Pill className="mr-2 h-5 w-5" />Medication Adherence
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -76,7 +96,7 @@ const Analytics = () => {
                     ))}
                   </Pie>
                   <Legend />
-                  <Tooltip />
+                  <RechartsTooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -86,7 +106,9 @@ const Analytics = () => {
         {/* Metric Distribution Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center"><Activity className="mr-2 h-5 w-5" />Metric Distribution</CardTitle>
+            <CardTitle className="text-lg flex items-center">
+              <Activity className="mr-2 h-5 w-5" />Metric Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -95,7 +117,7 @@ const Analytics = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <RechartsTooltip />
                   <Legend />
                   <Bar dataKey="value" fill="#82ca9d">
                     {metricData.map((entry, index) => (
@@ -111,7 +133,9 @@ const Analytics = () => {
         {/* Timeline Event Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center"><FileText className="mr-2 h-5 w-5" />Timeline Event Analysis</CardTitle>
+            <CardTitle className="text-lg flex items-center">
+              <FileText className="mr-2 h-5 w-5" />Timeline Event Analysis
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -120,7 +144,7 @@ const Analytics = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <RechartsTooltip />
                   <Legend />
                   <Line type="monotone" dataKey="value" stroke="#8884d8" />
                 </LineChart>
@@ -133,7 +157,9 @@ const Analytics = () => {
       {/* Average Metric Values */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center"><BarChart className="mr-2 h-5 w-5" />Average Metric Values</CardTitle>
+          <CardTitle className="text-lg flex items-center">
+            <BarChartIcon className="mr-2 h-5 w-5" />Average Metric Values
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
