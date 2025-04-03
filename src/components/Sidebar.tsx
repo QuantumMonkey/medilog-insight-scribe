@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -23,7 +24,8 @@ import {
   MessageCircle, 
   Settings, 
   HelpCircle,
-  Menu
+  Menu,
+  ClipboardList
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -56,6 +58,14 @@ const Sidebar = () => {
                   <Link to="/reports">
                     <FileText className="mr-2 h-5 w-5" />
                     <span>Health Reports</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild className={isActive('/consultations') ? 'bg-accent' : ''}>
+                  <Link to="/consultations">
+                    <ClipboardList className="mr-2 h-5 w-5" />
+                    <span>Consultations</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -12,6 +12,7 @@ import VitalMetrics from "./pages/VitalMetrics";
 import Medications from "./pages/Medications";
 import Analytics from "./pages/Analytics";
 import HealthAssistant from "./pages/HealthAssistant";
+import Consultations from "./pages/Consultations";
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="/reports" element={<HealthReports />} />
+            <Route path="/consultations" element={<Consultations />} />
             <Route path="/vitals" element={<VitalMetrics />} />
             <Route path="/medications" element={<Medications />} />
             <Route path="/analytics" element={<Analytics />} />
