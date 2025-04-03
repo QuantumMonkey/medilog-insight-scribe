@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,17 +40,14 @@ const Consultations = () => {
   const categories = ["General", "Cardiology", "Dermatology", "Orthopedics", "Nutrition", "Neurology", "Psychiatry", "Other"];
   
   useEffect(() => {
-    // Load all consultations on component mount
     const loadedConsultations = getAllConsultations();
     setConsultations(loadedConsultations);
     
-    // Set active consultation if available
     if (loadedConsultations.length > 0 && !activeConsultation) {
       setActiveConsultation(loadedConsultations[0]);
     }
   }, []);
   
-  // Filter consultations based on search term and category
   const filteredConsultations = consultations.filter(consultation => {
     const matchesSearch = consultation.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           consultation.doctor.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,14 +59,12 @@ const Consultations = () => {
     return matchesSearch && matchesCategory;
   });
   
-  // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setUploadedFile(e.target.files[0]);
     }
   };
   
-  // Handle form field changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setNewConsultation(prev => ({
@@ -79,7 +73,6 @@ const Consultations = () => {
     }));
   };
   
-  // Handle category selection
   const handleCategoryChange = (value: string) => {
     setNewConsultation(prev => ({
       ...prev,
@@ -87,7 +80,6 @@ const Consultations = () => {
     }));
   };
   
-  // Handle consultation upload
   const handleUpload = async () => {
     try {
       setIsUploading(true);
@@ -108,19 +100,15 @@ const Consultations = () => {
         isEncrypted: true,
       };
       
-      // Process document if uploaded
       if (uploadedFile) {
         consultationData = await processConsultationDocument(uploadedFile, consultationData);
       }
       
-      // Add the consultation
       const addedConsultation = addConsultation(consultationData as Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>);
       
-      // Update state
       setConsultations(prev => [...prev, addedConsultation]);
       setActiveConsultation(addedConsultation);
       
-      // Reset form
       setNewConsultation({
         title: '',
         date: new Date().toISOString().split('T')[0],
@@ -149,7 +137,6 @@ const Consultations = () => {
     }
   };
   
-  // Handle consultation deletion
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this consultation?")) {
       const deleted = deleteConsultation(id);
@@ -170,11 +157,8 @@ const Consultations = () => {
     }
   };
   
-  // Handle downloading the consultation document
   const handleDownload = (consultation: Consultation) => {
     if (consultation.fileUrl) {
-      // In a real app, this would download the actual file
-      // For this demo, we'll just show a toast
       toast({
         title: "Download started",
         description: "Your consultation document is being downloaded.",
@@ -417,7 +401,7 @@ const Consultations = () => {
                     <CardTitle className="flex items-center gap-2">
                       {activeConsultation.title}
                       {activeConsultation.isEncrypted && (
-                        <Lock className="h-4 w-4 text-green-500" title="Encrypted" />
+                        <Lock className="h-4 w-4 text-green-500" aria-label="Encrypted" />
                       )}
                     </CardTitle>
                     <CardDescription>
@@ -429,19 +413,18 @@ const Consultations = () => {
                       <Button 
                         variant="outline" 
                         size="icon" 
-                        title="Download"
-                        onClick={() => handleDownload(activeConsultation)}
+                        aria-label="Download"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button variant="outline" size="icon" title="Edit">
+                    <Button variant="outline" size="icon" aria-label="Edit">
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button 
                       variant="outline" 
                       size="icon" 
-                      title="Delete"
+                      aria-label="Delete"
                       onClick={() => handleDelete(activeConsultation.id)}
                     >
                       <Trash className="h-4 w-4" />
