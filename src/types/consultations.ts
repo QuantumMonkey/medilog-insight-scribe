@@ -9,4 +9,24 @@ export interface Consultation {
   category: string;
   fileUrl?: string;
   notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  documentContent?: string;
+  extractedData?: {
+    diagnosisCodes?: string[];
+    medications?: string[];
+    followUpDate?: string;
+    recommendations?: string[];
+  };
+  status: 'processed' | 'pending' | 'error';
+  isEncrypted: boolean;
+}
+
+export interface ConsultationFilter {
+  searchTerm: string;
+  category: string;
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
 }
