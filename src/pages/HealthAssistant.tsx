@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { sampleMetrics } from '@/data/sampleData';
 import { 
   MessageCircle, Heart, SendHorizontal, 
   Search, Trash, Archive, Copy, CornerDownLeft, 
-  Bot, Lightbulb, BookOpen, RotateCcw, AlertCircle, Zap
+  Bot, Lightbulb, BookOpen, RotateCcw, AlertCircle, Zap, BarChart
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from '@/hooks/use-toast';
@@ -406,7 +405,7 @@ const HealthAssistant = () => {
                         Medication information
                       </Button>
                       <Button variant="outline" className="justify-start" onClick={() => setInput("How are my health trends looking?")}>
-                        <BarChartIcon className="mr-2 h-4 w-4" />
+                        <BarChart className="mr-2 h-4 w-4" />
                         Health trend analysis
                       </Button>
                     </div>

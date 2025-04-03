@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -19,7 +18,7 @@ import {
   FileText, 
   PlusCircle, 
   ActivitySquare, 
-  Pills, 
+  Pill, 
   BarChartBig, 
   MessageCircle, 
   Settings, 
@@ -71,7 +70,7 @@ const Sidebar = () => {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className={isActive('/medications') ? 'bg-accent' : ''}>
                   <Link to="/medications">
-                    <Pills className="mr-2 h-5 w-5" />
+                    <Pill className="mr-2 h-5 w-5" />
                     <span>Medications</span>
                   </Link>
                 </SidebarMenuButton>
