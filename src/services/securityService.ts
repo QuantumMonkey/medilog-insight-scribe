@@ -1,4 +1,3 @@
-
 import CryptoJS from 'crypto-js';
 import { SecurityConfig } from '@/types/consultations';
 
@@ -7,13 +6,13 @@ const SECURITY_CONFIG_KEY = 'medlog_security_config';
 const ACTIVITY_LOG_KEY = 'medlog_activity_logs';
 
 // Initialize security config with defaults
-const initializeSecurityConfig = (): SecurityConfig => {
+const initializeSecurityConfig = () => {
   // Generate a random device ID if not already set
   const deviceId = generateDeviceId();
   
   return {
     biometricEnabled: true,
-    encryptionEnabled: true,
+    encryptionEnabled: false, // Disabled encryption for now
     deviceId,
     lastAuthTime: new Date().toISOString()
   };
@@ -31,7 +30,7 @@ const generateDeviceId = (): string => {
 };
 
 // Load security configuration
-export const getSecurityConfig = (): SecurityConfig | null => {
+export const getSecurityConfig = () => {
   try {
     const configData = localStorage.getItem(SECURITY_CONFIG_KEY);
     if (configData) {
@@ -45,7 +44,7 @@ export const getSecurityConfig = (): SecurityConfig | null => {
 };
 
 // Save security configuration
-export const saveSecurityConfig = (config: SecurityConfig): void => {
+export const saveSecurityConfig = (config) => {
   try {
     localStorage.setItem(SECURITY_CONFIG_KEY, JSON.stringify(config));
   } catch (error) {
@@ -54,7 +53,7 @@ export const saveSecurityConfig = (config: SecurityConfig): void => {
 };
 
 // Initialize security if not already set up
-export const initializeSecurity = (): SecurityConfig => {
+export const initializeSecurity = () => {
   const existingConfig = getSecurityConfig();
   if (existingConfig) {
     return existingConfig;
@@ -71,7 +70,7 @@ export const logActivity = (
   details: string,
   status: 'success' | 'failure' = 'success',
   consultationId?: string
-): void => {
+) => {
   try {
     const logs = getActivityLogs();
     const newLog = {
@@ -91,7 +90,7 @@ export const logActivity = (
 };
 
 // Get activity logs
-export const getActivityLogs = (): any[] => {
+export const getActivityLogs = () => {
   try {
     const logsData = localStorage.getItem(ACTIVITY_LOG_KEY);
     if (logsData) {
@@ -105,7 +104,7 @@ export const getActivityLogs = (): any[] => {
 };
 
 // Export logs as JSON
-export const exportLogs = (): string => {
+export const exportLogs = () => {
   const logs = getActivityLogs();
   return JSON.stringify(logs, null, 2);
 };
@@ -131,46 +130,11 @@ export const requestBiometricAuth = async (): Promise<boolean> => {
   }
 };
 
-// Encrypt data
+// For backward compatibility, keep these functions but make them pass-through
 export const encryptData = (data: string): string => {
-  try {
-    const config = getSecurityConfig() || initializeSecurity();
-    const encryptionKey = config.encryptionKey || config.deviceId;
-    
-    if (!encryptionKey) {
-      throw new Error("Encryption key not available");
-    }
-    
-    return CryptoJS.AES.encrypt(data, encryptionKey).toString();
-  } catch (error) {
-    console.error("Encryption error:", error);
-    logActivity('security_check', `Encryption failed: ${error}`, 'failure');
-    return data; // Return unencrypted data on failure
-  }
+  return data; // No encryption, just return the original data
 };
 
-// Decrypt data
-export const decryptData = (encryptedData: string): string => {
-  try {
-    const config = getSecurityConfig() || initializeSecurity();
-    const encryptionKey = config.encryptionKey || config.deviceId;
-    
-    if (!encryptionKey) {
-      throw new Error("Encryption key not available");
-    }
-    
-    const bytes = CryptoJS.AES.decrypt(encryptedData, encryptionKey);
-    const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-    
-    if (!decryptedData) {
-      throw new Error("Decryption resulted in empty data");
-    }
-    
-    logActivity('decrypt', 'Data decrypted successfully', 'success');
-    return decryptedData;
-  } catch (error) {
-    console.error("Decryption error:", error);
-    logActivity('decrypt', `Decryption failed: ${error}`, 'failure');
-    return encryptedData; // Return encrypted data on failure
-  }
+export const decryptData = (data: string): string => {
+  return data; // No decryption, just return the original data
 };

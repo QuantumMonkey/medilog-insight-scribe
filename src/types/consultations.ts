@@ -43,8 +43,8 @@ export interface ActivityLog {
 
 export interface SecurityConfig {
   biometricEnabled: boolean;
-  encryptionEnabled: boolean;
-  encryptionKey?: string;
+  encryptionEnabled: boolean; // We'll keep this for future use
+  encryptionKey?: string; // We'll keep this for future use
   lastAuthTime?: string;
   deviceId?: string;
 }

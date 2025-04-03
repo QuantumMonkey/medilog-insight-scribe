@@ -29,6 +29,11 @@ const BiometricAuth: React.FC<BiometricAuthProps> = ({
           description: "Your identity has been verified.",
         });
         setIsOpen(false);
+        
+        // Set app as active when authenticated
+        window.addEventListener('focus', handleAppActive);
+        window.addEventListener('blur', handleAppInactive);
+        
         onAuthSuccess();
       } else {
         toast({
@@ -50,6 +55,19 @@ const BiometricAuth: React.FC<BiometricAuthProps> = ({
     }
   };
 
+  // Handle app becoming active (foreground)
+  const handleAppActive = () => {
+    // App is now in foreground
+    console.log("App is active/foreground");
+  };
+
+  // Handle app becoming inactive (background)
+  const handleAppInactive = () => {
+    // App is now in background
+    console.log("App is inactive/background");
+    // Future implementation: This is where we'd lock the app when it goes to background
+  };
+
   useEffect(() => {
     // Check if authentication is required
     const checkAuth = async () => {
@@ -62,6 +80,12 @@ const BiometricAuth: React.FC<BiometricAuthProps> = ({
     };
     
     checkAuth();
+
+    // Cleanup listeners when component unmounts
+    return () => {
+      window.removeEventListener('focus', handleAppActive);
+      window.removeEventListener('blur', handleAppInactive);
+    };
   }, [onAuthSuccess]);
 
   // If dialog is closed without authentication, call failure handler

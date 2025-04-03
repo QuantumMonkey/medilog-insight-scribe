@@ -1,76 +1,13 @@
 
 import { Consultation, ConsultationFilter } from "@/types/consultations";
 import { sampleConsultations } from "@/data/consultationData";
-import { encryptData, decryptData, logActivity, initializeSecurity } from "@/services/securityService";
+import { logActivity, initializeSecurity } from "@/services/securityService";
 
 // Storage key for consultations
 const STORAGE_KEY = 'medlog_consultations';
 
 // Initialize security
 initializeSecurity();
-
-// Encrypt consultation data for storage
-const encryptConsultation = (consultation: Consultation): Consultation => {
-  if (!consultation.isEncrypted) {
-    return consultation;
-  }
-  
-  try {
-    // Encrypt sensitive fields
-    const sensitiveData = JSON.stringify({
-      doctor: consultation.doctor,
-      description: consultation.description,
-      notes: consultation.notes,
-      documentContent: consultation.documentContent,
-      extractedData: consultation.extractedData
-    });
-    
-    const encryptedData = encryptData(sensitiveData);
-    
-    return {
-      ...consultation,
-      doctor: '[Encrypted]',
-      description: '[Encrypted]',
-      notes: '[Encrypted]',
-      documentContent: '[Encrypted]',
-      _encryptedData: encryptedData // Store encrypted data separately
-    } as any;
-  } catch (error) {
-    console.error("Error encrypting consultation:", error);
-    logActivity('security_check', `Failed to encrypt consultation ${consultation.id}`, 'failure', consultation.id);
-    return consultation;
-  }
-};
-
-// Decrypt consultation data for viewing
-const decryptConsultation = (consultation: any): Consultation => {
-  if (!consultation.isEncrypted || !consultation._encryptedData) {
-    return consultation;
-  }
-  
-  try {
-    const decryptedDataStr = decryptData(consultation._encryptedData);
-    const decryptedData = JSON.parse(decryptedDataStr);
-    
-    const result = {
-      ...consultation,
-      doctor: decryptedData.doctor || consultation.doctor,
-      description: decryptedData.description || consultation.description,
-      notes: decryptedData.notes || consultation.notes,
-      documentContent: decryptedData.documentContent || consultation.documentContent,
-      extractedData: decryptedData.extractedData || consultation.extractedData
-    };
-    
-    // Remove the encrypted data field before returning
-    delete result._encryptedData;
-    
-    return result;
-  } catch (error) {
-    console.error("Error decrypting consultation:", error);
-    logActivity('decrypt', `Failed to decrypt consultation ${consultation.id}`, 'failure', consultation.id);
-    return consultation;
-  }
-};
 
 // Load consultations from localStorage or use sample data
 const loadConsultations = (): Consultation[] => {
@@ -87,12 +24,10 @@ const loadConsultations = (): Consultation[] => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'processed' as const,
-      isEncrypted: true,
+      isEncrypted: false, // Set to false since we're not encrypting
     }));
     
-    // Encrypt and save enhanced sample data to localStorage
-    const encryptedData = enhancedSampleData.map(encryptConsultation);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(encryptedData));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(enhancedSampleData));
     
     return enhancedSampleData;
   } catch (error) {
@@ -105,8 +40,7 @@ const loadConsultations = (): Consultation[] => {
 // Save consultations to localStorage
 const saveConsultations = (consultations: Consultation[]): void => {
   try {
-    const encryptedConsultations = consultations.map(encryptConsultation);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(encryptedConsultations));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(consultations));
   } catch (error) {
     console.error("Error saving consultations:", error);
     logActivity('update', `Failed to save consultations: ${error}`, 'failure');
@@ -117,17 +51,17 @@ const saveConsultations = (consultations: Consultation[]): void => {
 export const getAllConsultations = (): Consultation[] => {
   const consultations = loadConsultations();
   logActivity('view', 'Retrieved all consultations', 'success');
-  return consultations.map(decryptConsultation);
+  return consultations;
 };
 
 // Get a consultation by ID
 export const getConsultationById = (id: string): Consultation | undefined => {
   const consultations = loadConsultations();
-  const encryptedConsultation = consultations.find(consultation => consultation.id === id);
+  const consultation = consultations.find(consultation => consultation.id === id);
   
-  if (encryptedConsultation) {
+  if (consultation) {
     logActivity('view', `Retrieved consultation ${id}`, 'success', id);
-    return decryptConsultation(encryptedConsultation);
+    return consultation;
   }
   
   return undefined;
@@ -144,7 +78,7 @@ export const addConsultation = (consultation: Omit<Consultation, 'id' | 'created
     createdAt: now,
     updatedAt: now,
     status: consultation.status || 'pending',
-    isEncrypted: true,
+    isEncrypted: false, // Set to false since we're not encrypting
   };
   
   consultations.push(newConsultation);
@@ -161,18 +95,15 @@ export const updateConsultation = (id: string, updates: Partial<Consultation>): 
   
   if (index === -1) return undefined;
   
-  // Decrypt first to ensure we have the full data
-  const currentConsultation = decryptConsultation(consultations[index]);
-  
   consultations[index] = {
-    ...currentConsultation,
+    ...consultations[index],
     ...updates,
     updatedAt: new Date().toISOString(),
   };
   
   saveConsultations(consultations);
   logActivity('update', `Updated consultation ${id}`, 'success', id);
-  return decryptConsultation(consultations[index]);
+  return consultations[index];
 };
 
 // Delete a consultation
@@ -191,7 +122,7 @@ export const deleteConsultation = (id: string): boolean => {
 
 // Filter consultations based on criteria
 export const filterConsultations = (filter: ConsultationFilter): Consultation[] => {
-  const consultations = loadConsultations().map(decryptConsultation);
+  const consultations = loadConsultations();
   
   return consultations.filter(consultation => {
     // Search term filter
