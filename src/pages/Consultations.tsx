@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,15 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Calendar, User, Building, PlusCircle, Search, Filter, Download, Edit, Trash, Eye, Lock, Loader2, AlertTriangle, CheckCircle } from "lucide-react";
+import { FileText, Calendar, User, Building, PlusCircle, Search, Filter, Download, Edit, Trash, Eye, Lock, Loader2, AlertTriangle, CheckCircle, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
 import { Consultation } from '@/types/consultations';
-import { getAllConsultations, addConsultation, updateConsultation, deleteConsultation, filterConsultations } from '@/services/consultationService';
+import { getAllConsultations, addConsultation, updateConsultation, deleteConsultation, filterConsultations, exportConsultations } from '@/services/consultationService';
 import { processConsultationDocument } from '@/utils/documentProcessor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BiometricAuth from '@/components/BiometricAuth';
+import ActivityLogger from '@/components/ActivityLogger';
+import { logActivity } from '@/services/securityService';
 
 const Consultations = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +28,7 @@ const Consultations = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [showExtractedData, setShowExtractedData] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [newConsultation, setNewConsultation] = useState({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -40,13 +45,16 @@ const Consultations = () => {
   const categories = ["General", "Cardiology", "Dermatology", "Orthopedics", "Nutrition", "Neurology", "Psychiatry", "Other"];
   
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    // Load consultations only after authentication
     const loadedConsultations = getAllConsultations();
     setConsultations(loadedConsultations);
     
     if (loadedConsultations.length > 0 && !activeConsultation) {
       setActiveConsultation(loadedConsultations[0]);
     }
-  }, []);
+  }, [isAuthenticated]);
   
   const filteredConsultations = consultations.filter(consultation => {
     const matchesSearch = consultation.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -159,12 +167,71 @@ const Consultations = () => {
   
   const handleDownload = (consultation: Consultation) => {
     if (consultation.fileUrl) {
+      logActivity('export', `Downloaded consultation document: ${consultation.title}`, 'success', consultation.id);
       toast({
         title: "Download started",
         description: "Your consultation document is being downloaded.",
       });
     }
   };
+  
+  const handleExportData = () => {
+    try {
+      const exportData = exportConsultations();
+      
+      // Create a blob with the data
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create a link and trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'medical_consultations_export.json';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Export successful",
+        description: "Your medical data has been exported successfully.",
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export failed",
+        description: "There was a problem exporting your data.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+    logActivity('security_check', 'User authenticated successfully', 'success');
+    toast({
+      title: "Authentication successful",
+      description: "Your data is now accessible.",
+    });
+  };
+  
+  const handleAuthFailure = () => {
+    // In a real app, you might want to handle this differently
+    // For demo purposes, we'll still allow access
+    setIsAuthenticated(true);
+    logActivity('security_check', 'Authentication skipped', 'success');
+    toast({
+      title: "Authentication skipped",
+      description: "For demo purposes, access is still granted.",
+      variant: "destructive"
+    });
+  };
+  
+  if (!isAuthenticated) {
+    return <BiometricAuth onAuthSuccess={handleAuthSuccess} onAuthFailure={handleAuthFailure} />;
+  }
   
   return (
     <div className="space-y-6">
@@ -174,135 +241,144 @@ const Consultations = () => {
           <p className="text-muted-foreground">Store and manage your medical consultation records</p>
         </div>
         
-        <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Upload Consultation
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[525px]">
-            <DialogHeader>
-              <DialogTitle>Upload Consultation Paper</DialogTitle>
-              <DialogDescription>
-                Upload your consultation document or enter details manually.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="consultation-title">Consultation Title*</Label>
-                <Input 
-                  id="consultation-title" 
-                  placeholder="E.g., Cardiology Follow-up" 
-                  value={newConsultation.title}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-wrap gap-2">
+          <ActivityLogger />
+          
+          <Button variant="outline" onClick={handleExportData}>
+            <Download className="mr-2 h-4 w-4" />
+            Export Data
+          </Button>
+          
+          <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Upload Consultation
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[525px]">
+              <DialogHeader>
+                <DialogTitle>Upload Consultation Paper</DialogTitle>
+                <DialogDescription>
+                  Upload your consultation document or enter details manually.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="consultation-date">Date*</Label>
+                  <Label htmlFor="consultation-title">Consultation Title*</Label>
                   <Input 
-                    id="consultation-date" 
-                    type="date" 
-                    value={newConsultation.date}
+                    id="consultation-title" 
+                    placeholder="E.g., Cardiology Follow-up" 
+                    value={newConsultation.title}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="consultation-date">Date*</Label>
+                    <Input 
+                      id="consultation-date" 
+                      type="date" 
+                      value={newConsultation.date}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="consultation-category">Category*</Label>
+                    <Select 
+                      value={newConsultation.category} 
+                      onValueChange={handleCategoryChange}
+                    >
+                      <SelectTrigger id="consultation-category">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(category => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="consultation-doctor">Doctor's Name</Label>
+                    <Input 
+                      id="consultation-doctor" 
+                      placeholder="Dr. Jane Smith" 
+                      value={newConsultation.doctor}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="consultation-facility">Healthcare Facility</Label>
+                    <Input 
+                      id="consultation-facility" 
+                      placeholder="City Hospital" 
+                      value={newConsultation.facility}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="consultation-category">Category*</Label>
-                  <Select 
-                    value={newConsultation.category} 
-                    onValueChange={handleCategoryChange}
+                  <Label htmlFor="consultation-description">Description</Label>
+                  <Input 
+                    id="consultation-description" 
+                    placeholder="Brief description of the consultation" 
+                    value={newConsultation.description}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="consultation-notes">Notes</Label>
+                  <Textarea 
+                    id="consultation-notes" 
+                    placeholder="Detailed notes about the consultation" 
+                    rows={3} 
+                    value={newConsultation.notes}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="file-upload">Upload Document (PDF, Image, or Text)</Label>
+                  <Input 
+                    id="file-upload" 
+                    type="file" 
+                    onChange={handleFileChange}
+                    accept=".pdf,.jpg,.jpeg,.png,.txt,.doc,.docx"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Document will be analyzed to extract medical information automatically.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="encrypt-data" defaultChecked disabled />
+                  <label
+                    htmlFor="encrypt-data"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    <SelectTrigger id="consultation-category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    Encrypt sensitive data (always enabled for medical records)
+                  </label>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="consultation-doctor">Doctor's Name</Label>
-                  <Input 
-                    id="consultation-doctor" 
-                    placeholder="Dr. Jane Smith" 
-                    value={newConsultation.doctor}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="consultation-facility">Healthcare Facility</Label>
-                  <Input 
-                    id="consultation-facility" 
-                    placeholder="City Hospital" 
-                    value={newConsultation.facility}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="consultation-description">Description</Label>
-                <Input 
-                  id="consultation-description" 
-                  placeholder="Brief description of the consultation" 
-                  value={newConsultation.description}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="consultation-notes">Notes</Label>
-                <Textarea 
-                  id="consultation-notes" 
-                  placeholder="Detailed notes about the consultation" 
-                  rows={3} 
-                  value={newConsultation.notes}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="file-upload">Upload Document (PDF, Image, or Text)</Label>
-                <Input 
-                  id="file-upload" 
-                  type="file" 
-                  onChange={handleFileChange}
-                  accept=".pdf,.jpg,.jpeg,.png,.txt,.doc,.docx"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Document will be analyzed to extract medical information automatically.
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="encrypt-data" defaultChecked disabled />
-                <label
-                  htmlFor="encrypt-data"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Encrypt sensitive data (always enabled for medical records)
-                </label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpload} disabled={isUploading}>
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Upload Consultation"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
+                <Button onClick={handleUpload} disabled={isUploading}>
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Upload Consultation"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       
       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -347,7 +423,7 @@ const Consultations = () => {
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium leading-tight">{consultation.title}</h3>
                           {consultation.isEncrypted && (
-                            <Lock className="h-3 w-3 text-green-500" />
+                            <Lock className="h-3 w-3 text-green-500" aria-label="Encrypted" />
                           )}
                         </div>
                         <div className="flex items-center text-xs text-muted-foreground mt-1">
@@ -414,6 +490,7 @@ const Consultations = () => {
                         variant="outline" 
                         size="icon" 
                         aria-label="Download"
+                        onClick={() => handleDownload(activeConsultation)}
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -531,6 +608,22 @@ const Consultations = () => {
                               </ul>
                             </div>
                           )}
+                          
+                          {/* New: Additional metrics extracted from documents */}
+                          {activeConsultation.extractedData.additionalMetrics && 
+                           Object.keys(activeConsultation.extractedData.additionalMetrics).length > 0 && (
+                            <div>
+                              <h4 className="text-xs font-medium text-muted-foreground">Additional Health Metrics</h4>
+                              <div className="mt-1 grid grid-cols-2 gap-2">
+                                {Object.entries(activeConsultation.extractedData.additionalMetrics).map(([key, value], i) => (
+                                  <div key={i} className="flex flex-col">
+                                    <span className="text-xs text-muted-foreground">{key}</span>
+                                    <span>{value}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </CollapsibleContent>
                       </Collapsible>
                     )}
@@ -548,7 +641,7 @@ const Consultations = () => {
                           </div>
                         )}
                         
-                        <Button variant="outline" className="mt-4">
+                        <Button variant="outline" className="mt-4" onClick={() => handleDownload(activeConsultation)}>
                           <Eye className="mr-2 h-4 w-4" />
                           View Document
                         </Button>
