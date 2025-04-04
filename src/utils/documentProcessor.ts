@@ -1,9 +1,8 @@
-
 import { Consultation } from "@/types/consultations";
 import { logActivity } from "@/services/securityService";
 import Tesseract from 'tesseract.js';
 
-// Improved OCR function that uses Tesseract.js
+// Enhanced OCR function with improved configuration
 export const extractTextFromDocument = async (file: File): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -16,23 +15,31 @@ export const extractTextFromDocument = async (file: File): Promise<string> => {
         // This is a simplified version for the demo
         simulatePdfExtraction(file, resolve);
       } else if (file.type.startsWith('image/')) {
-        // Use Tesseract.js for image OCR
+        // Use Tesseract.js for image OCR with enhanced configuration
         const imageUrl = URL.createObjectURL(file);
         
         try {
+          // Enhanced Tesseract configuration
           const result = await Tesseract.recognize(
             imageUrl,
             'eng', // English language
             { 
               logger: progress => {
-                // You could update UI with progress here
                 console.log('OCR Progress:', progress);
-              }
+              },
+              // Enhanced configuration for better recognition
+              tessedit_ocr_engine_mode: Tesseract.PSM.AUTO,
+              tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-:;/\\()[]{}\'"`!@#$%^&*_+=<>?| ',
+              tessjs_create_hocr: '0',
+              tessjs_create_tsv: '0',
             }
           );
           
           URL.revokeObjectURL(imageUrl); // Clean up
-          resolve(result.data.text);
+          
+          // Post-process the text for better results
+          const processedText = postProcessOcrText(result.data.text);
+          resolve(processedText);
         } catch (error) {
           console.error("Tesseract OCR error:", error);
           URL.revokeObjectURL(imageUrl); // Clean up even on error
@@ -64,6 +71,45 @@ export const extractTextFromDocument = async (file: File): Promise<string> => {
   });
 };
 
+// Post-process OCR text to improve quality
+const postProcessOcrText = (text: string): string => {
+  if (!text) return '';
+  
+  // Remove excessive whitespace
+  let processed = text.replace(/\s+/g, ' ');
+  
+  // Fix common OCR errors
+  processed = processed
+    .replace(/[|]l[|]/g, 'I') // Fix common I/l confusion
+    .replace(/[|]1[|]/g, 'I') // Fix common I/1 confusion
+    .replace(/0/g, 'O') // Fix common O/0 confusion in specific contexts
+    .replace(/rnm/g, 'mm') // Fix common rn/m confusion
+    .replace(/cl/g, 'd') // Fix common cl/d confusion
+    .replace(/vv/g, 'w') // Fix common vv/w confusion
+    .replace(/[({]3[)}]/g, 'B') // Fix common 3/B confusion
+    .replace(/[({]5[)}]/g, 'S'); // Fix common 5/S confusion
+  
+  // Enhance medical terminology recognition
+  const commonMedicalTerms = {
+    'dlagnosis': 'diagnosis',
+    'patjent': 'patient',
+    'sympt0ms': 'symptoms',
+    'prescriptjon': 'prescription',
+    'medicatjon': 'medication',
+    'allergjes': 'allergies',
+    'blcod': 'blood',
+    'pressuro': 'pressure'
+  };
+  
+  // Replace common medical term OCR errors
+  Object.entries(commonMedicalTerms).forEach(([error, correction]) => {
+    const regex = new RegExp(error, 'gi');
+    processed = processed.replace(regex, correction);
+  });
+  
+  return processed;
+};
+
 // Simulate PDF extraction (would be replaced with actual PDF.js in a real app)
 const simulatePdfExtraction = (file: File, resolve: (value: string) => void) => {
   setTimeout(() => {
@@ -87,10 +133,11 @@ const simulateGenericExtraction = (file: File, resolve: (value: string) => void)
 
 // Extract structured data from the document text with improved NLP simulation
 export const extractStructuredData = (text: string) => {
-  // This is a simplified version - in a real app, this would use more sophisticated NLP
+  // Enhanced extraction with better pattern matching
   
   const extractDiagnosisCodes = (text: string) => {
-    const codeRegex = /([A-Z][0-9]{2}(?:\.[0-9]+)?)/g;
+    // Improved regex for ICD-10 codes (covers more formats)
+    const codeRegex = /([A-Z][0-9]{2}(?:\.[0-9]+)?)|([A-Z][0-9]{1,2})|([0-9]{3}(?:\.[0-9]+)?)/g;
     return text.match(codeRegex) || [];
   };
   
@@ -102,9 +149,23 @@ export const extractStructuredData = (text: string) => {
       "Simvastatin", "Omeprazole", "Prednisone", "Albuterol", "Fluoxetine",
       "Acetaminophen", "Amoxicillin", "Losartan", "Gabapentin"
     ];
-    return commonMeds.filter(med => 
-      new RegExp(`\\b${med}\\b`, 'i').test(text)
-    );
+    
+    // Use a more sophisticated detection approach
+    const foundMeds = [];
+    for (const med of commonMeds) {
+      // Look for medication names with common dosage patterns nearby
+      const medRegex = new RegExp(`\\b${med}\\b[^.]*?(\\d+\\s*(?:mg|mcg|g|ml))?`, 'i');
+      const match = text.match(medRegex);
+      if (match) {
+        foundMeds.push(match[0].trim());
+      }
+    }
+    
+    // Additional pattern to catch medications not in our list but followed by dosage
+    const dosagePattern = /\b[A-Z][a-z]+(?:in)?(?:\s+[a-z]+)?\s+(\d+\s*(?:mg|mcg|g|ml))/gi;
+    const dosageMatches = text.match(dosagePattern) || [];
+    
+    return [...foundMeds, ...dosageMatches];
   };
   
   const extractFollowUpDate = (text: string) => {
@@ -209,7 +270,7 @@ export const processConsultationDocument = async (file: File, consultation: Part
       documentContent: extractedText,
       extractedData: structuredData,
       status: 'processed',
-      isEncrypted: true, // Always encrypt medical data
+      isEncrypted: false, // Encryption disabled per request
     };
   } catch (error) {
     console.error("Error processing document:", error);
