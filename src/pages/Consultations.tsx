@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { FileText, Calendar, User, Building, PlusCircle, Search, Filter, Downloa
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
 import { Consultation } from '@/types/consultations';
-import { getAllConsultations, addConsultation, updateConsultation, deleteConsultation, filterConsultations, exportConsultations } from '@/services/consultationService';
+import { getAllConsultations, addConsultation, updateConsultation, deleteConsultation, filterConsultations, exportConsultations } from '@/services/consultation';
 import { processConsultationDocument } from '@/utils/documentProcessor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
