@@ -9,35 +9,169 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { sampleMedications } from '@/data/sampleData';
-import { Pill, Clock, Calendar, AlertCircle, Search, Filter, Plus, CheckCircle, XCircle, Bell, Edit, Trash } from "lucide-react";
+import { Pill, Clock, Calendar, AlertCircle, Search, Filter, Plus, CheckCircle, XCircle, Bell, Edit, Trash, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Medication } from '@/types/health';
 import { useToast } from '@/hooks/use-toast';
+import { exportMedicationToPDF } from '@/services/consultation/consultationExport';
 
 const Medications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [medications, setMedications] = useState(sampleMedications);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(
     sampleMedications.find(med => med.isActive) || sampleMedications[0]
   );
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [newMedication, setNewMedication] = useState<Partial<Medication>>({
+    isActive: true,
+    startDate: new Date().toISOString().split('T')[0],
+    reminderTimes: []
+  });
   const { toast } = useToast();
   
   const handleAddMedication = () => {
+    // Validate required fields
+    if (!newMedication.name || !newMedication.dosage || !newMedication.frequency || !newMedication.forCondition) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create new medication with unique id
+    const medication: Medication = {
+      id: (Math.max(0, ...medications.map(m => parseInt(m.id))) + 1).toString(),
+      name: newMedication.name!,
+      dosage: newMedication.dosage!,
+      frequency: newMedication.frequency!,
+      forCondition: newMedication.forCondition!,
+      startDate: newMedication.startDate!,
+      endDate: newMedication.endDate,
+      isActive: true,
+      notes: newMedication.notes || "No notes provided.",
+      reminderTimes: newMedication.reminderEnabled ? ["8:00 AM"] : []
+    };
+    
+    // Add to medications list
+    const updatedMedications = [...medications, medication];
+    setMedications(updatedMedications);
+    setSelectedMedication(medication);
+    
+    // Reset new medication form
+    setNewMedication({
+      isActive: true,
+      startDate: new Date().toISOString().split('T')[0]
+    });
+    
     toast({
       title: "Medication added",
-      description: "Your medication has been added to your list.",
+      description: `${medication.name} has been added to your list.`,
     });
   };
   
   const handleStatusToggle = () => {
+    if (!selectedMedication) return;
+    
+    // Update medication status
+    const updatedMedications = medications.map(med => 
+      med.id === selectedMedication.id 
+        ? { ...med, isActive: !med.isActive } 
+        : med
+    );
+    
+    const updatedSelectedMedication = {
+      ...selectedMedication,
+      isActive: !selectedMedication.isActive
+    };
+    
+    setMedications(updatedMedications);
+    setSelectedMedication(updatedSelectedMedication);
+    
     toast({
-      title: selectedMedication?.isActive ? "Medication deactivated" : "Medication activated",
-      description: `${selectedMedication?.name} has been ${selectedMedication?.isActive ? 'marked as completed' : 'marked as active'}.`,
+      title: updatedSelectedMedication.isActive ? "Medication activated" : "Medication completed",
+      description: `${selectedMedication.name} has been ${updatedSelectedMedication.isActive ? 'marked as active' : 'marked as completed'}.`,
     });
   };
   
+  const handleSetReminder = () => {
+    if (!selectedMedication) return;
+    
+    const updatedMedication = {
+      ...selectedMedication,
+      reminderTimes: selectedMedication.reminderTimes?.length 
+        ? selectedMedication.reminderTimes 
+        : ["8:00 AM"]
+    };
+    
+    const updatedMedications = medications.map(med => 
+      med.id === selectedMedication.id ? updatedMedication : med
+    );
+    
+    setMedications(updatedMedications);
+    setSelectedMedication(updatedMedication);
+    
+    toast({
+      title: "Reminder set",
+      description: `You will receive reminders for ${selectedMedication.name}.`,
+    });
+  };
+  
+  const handlePrintInformation = () => {
+    if (!selectedMedication) return;
+    
+    try {
+      // Generate PDF
+      const { pdf, filename } = exportMedicationToPDF(selectedMedication);
+      
+      // Show dialog asking user if they want to save or print
+      setShowPrintDialog(true);
+      
+      // Store PDF data in component state for later use
+      setNewMedication(prev => ({ ...prev, pdfData: pdf, pdfFilename: filename }));
+      
+      toast({
+        title: "PDF generated",
+        description: "Your medication information has been converted to PDF.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error generating PDF",
+        description: "There was a problem creating the PDF file.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleSavePDF = () => {
+    // Use the PDF data from state to save the file
+    if (newMedication.pdfData) {
+      newMedication.pdfData.save(newMedication.pdfFilename);
+      setShowPrintDialog(false);
+      toast({
+        title: "PDF saved",
+        description: `File saved as ${newMedication.pdfFilename}`,
+      });
+    }
+  };
+  
+  const handlePrintPDF = () => {
+    // Use the PDF data from state to print
+    if (newMedication.pdfData) {
+      newMedication.pdfData.autoPrint();
+      newMedication.pdfData.output('dataurlnewwindow');
+      setShowPrintDialog(false);
+      toast({
+        title: "Print requested",
+        description: "The document has been sent to your printer.",
+      });
+    }
+  };
+  
   // Filter medications based on search and status
-  const filteredMedications = sampleMedications.filter(med => {
+  const filteredMedications = medications.filter(med => {
     const matchesSearch = med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           med.forCondition.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || 
@@ -45,6 +179,11 @@ const Medications = () => {
                           (filterStatus === 'inactive' && !med.isActive);
     return matchesSearch && matchesFilter;
   });
+  
+  // Helper function to update new medication data
+  const updateNewMedication = (field: string, value: any) => {
+    setNewMedication(prev => ({ ...prev, [field]: value }));
+  };
   
   return (
     <div className="space-y-6">
@@ -71,56 +210,90 @@ const Medications = () => {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="medication-name">Medication Name</Label>
-                <Input id="medication-name" placeholder="e.g., Lisinopril" />
+                <Input 
+                  id="medication-name" 
+                  placeholder="e.g., Lisinopril"
+                  value={newMedication.name || ''}
+                  onChange={(e) => updateNewMedication('name', e.target.value)} 
+                />
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="dosage">Dosage</Label>
-                <Input id="dosage" placeholder="e.g., 10mg" />
+                <Input 
+                  id="dosage" 
+                  placeholder="e.g., 10mg"
+                  value={newMedication.dosage || ''}
+                  onChange={(e) => updateNewMedication('dosage', e.target.value)} 
+                />
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="frequency">Frequency</Label>
-                <Select defaultValue="daily-once">
+                <Select 
+                  value={newMedication.frequency || 'daily-once'}
+                  onValueChange={(value) => updateNewMedication('frequency', value)}
+                >
                   <SelectTrigger id="frequency">
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="daily-once">Once daily</SelectItem>
-                    <SelectItem value="daily-twice">Twice daily</SelectItem>
-                    <SelectItem value="daily-three">Three times daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="as-needed">As needed</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
+                    <SelectItem value="Once daily">Once daily</SelectItem>
+                    <SelectItem value="Twice daily">Twice daily</SelectItem>
+                    <SelectItem value="Three times daily">Three times daily</SelectItem>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="As needed">As needed</SelectItem>
+                    <SelectItem value="Custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="condition">For Condition</Label>
-                <Input id="condition" placeholder="e.g., High blood pressure" />
+                <Input 
+                  id="condition" 
+                  placeholder="e.g., High blood pressure"
+                  value={newMedication.forCondition || ''}
+                  onChange={(e) => updateNewMedication('forCondition', e.target.value)} 
+                />
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="start-date">Start Date</Label>
-                <Input id="start-date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                <Input 
+                  id="start-date" 
+                  type="date" 
+                  value={newMedication.startDate || ''}
+                  onChange={(e) => updateNewMedication('startDate', e.target.value)} 
+                />
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="notes">Notes (Optional)</Label>
-                <Input id="notes" placeholder="Any additional instructions" />
+                <Input 
+                  id="notes" 
+                  placeholder="Any additional instructions"
+                  value={newMedication.notes || ''}
+                  onChange={(e) => updateNewMedication('notes', e.target.value)} 
+                />
               </div>
               
               <div className="grid gap-2">
                 <Label className="mb-1">Set Reminder</Label>
                 <div className="flex items-center justify-between">
                   <span>Daily reminder for this medication</span>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={newMedication.reminderEnabled || false}
+                    onCheckedChange={(checked) => updateNewMedication('reminderEnabled', checked)} 
+                  />
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" onClick={() => setNewMedication({
+                isActive: true,
+                startDate: new Date().toISOString().split('T')[0]
+              })}>Cancel</Button>
               <Button onClick={handleAddMedication}>Add Medication</Button>
             </DialogFooter>
           </DialogContent>
@@ -328,7 +501,7 @@ const Medications = () => {
                             </p>
                           </div>
                         </div>
-                        <Switch checked={selectedMedication.reminderTimes ? true : false} />
+                        <Switch checked={selectedMedication.reminderTimes ? selectedMedication.reminderTimes.length > 0 : false} />
                       </div>
                       
                       {selectedMedication.reminderTimes && selectedMedication.reminderTimes.length > 0 && (
@@ -369,13 +542,39 @@ const Medications = () => {
               </CardContent>
               
               <CardFooter className="flex flex-col sm:flex-row gap-2 justify-between">
-                <Button variant="outline" className="w-full sm:w-auto">Print Information</Button>
-                <Button className="w-full sm:w-auto">Set Reminder</Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={handlePrintInformation}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print Information
+                </Button>
+                <Button className="w-full sm:w-auto" onClick={handleSetReminder}>Set Reminder</Button>
               </CardFooter>
             </Card>
           </div>
         )}
       </div>
+      
+      {/* Print/Save PDF Dialog */}
+      <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>PDF Generated</DialogTitle>
+            <DialogDescription>
+              Your medication information has been converted to a PDF document. What would you like to do with it?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <Button onClick={handleSavePDF} className="w-full">
+              Save PDF to Device
+            </Button>
+            <Button onClick={handlePrintPDF} variant="outline" className="w-full">
+              Print Document
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowPrintDialog(false)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

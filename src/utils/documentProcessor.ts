@@ -1,3 +1,4 @@
+
 import { Consultation } from "@/types/consultations";
 import { logActivity } from "@/services/securityService";
 import Tesseract from 'tesseract.js';
@@ -19,7 +20,7 @@ export const extractTextFromDocument = async (file: File): Promise<string> => {
         const imageUrl = URL.createObjectURL(file);
         
         try {
-          // Enhanced Tesseract configuration
+          // Enhanced Tesseract configuration with proper typing
           const result = await Tesseract.recognize(
             imageUrl,
             'eng', // English language
@@ -27,11 +28,11 @@ export const extractTextFromDocument = async (file: File): Promise<string> => {
               logger: progress => {
                 console.log('OCR Progress:', progress);
               },
-              // Enhanced configuration for better recognition
-              tessedit_ocr_engine_mode: Tesseract.PSM.AUTO,
-              tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-:;/\\()[]{}\'"`!@#$%^&*_+=<>?| ',
-              tessjs_create_hocr: '0',
-              tessjs_create_tsv: '0',
+              // Use proper Tesseract.js configuration options
+              tessedit_create_hocr: '0',
+              tessedit_create_tsv: '0',
+              preserve_interword_spaces: '1',
+              tessjs_create_box: '0'
             }
           );
           
