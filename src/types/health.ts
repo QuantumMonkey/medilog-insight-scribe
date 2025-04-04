@@ -34,6 +34,11 @@ export interface Medication {
   forCondition: string;
   isActive: boolean;
   reminderTimes?: string[];
+  // Add new properties for PDF functionality
+  pdfData?: any;
+  pdfFilename?: string;
+  // Add property for reminder enabled state
+  reminderEnabled?: boolean;
 }
 
 export interface TimelineEvent {

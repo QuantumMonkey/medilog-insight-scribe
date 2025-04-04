@@ -2,13 +2,18 @@
 import React from 'react';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from './Sidebar';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Layout = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  
+  const handleAddNewRecord = () => {
+    navigate('/reports/new');
+  };
   
   return (
     <SidebarProvider>
@@ -19,7 +24,10 @@ const Layout = () => {
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold">MediLog</h1>
               {!isMobile && (
-                <Button className="bg-health-blue text-white hover:bg-health-blue/90">
+                <Button 
+                  onClick={handleAddNewRecord}
+                  className="bg-health-blue text-white hover:bg-health-blue/90"
+                >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add New Record
                 </Button>
@@ -28,7 +36,10 @@ const Layout = () => {
             <Outlet />
             {isMobile && (
               <div className="fixed bottom-4 right-4">
-                <Button className="rounded-full w-14 h-14 bg-health-blue text-white hover:bg-health-blue/90 shadow-lg">
+                <Button 
+                  onClick={handleAddNewRecord}
+                  className="rounded-full w-14 h-14 bg-health-blue text-white hover:bg-health-blue/90 shadow-lg"
+                >
                   <PlusCircle className="h-6 w-6" />
                 </Button>
               </div>

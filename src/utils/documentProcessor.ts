@@ -1,4 +1,3 @@
-
 import { Consultation } from "@/types/consultations";
 import { logActivity } from "@/services/securityService";
 import Tesseract from 'tesseract.js';
@@ -21,20 +20,7 @@ export const extractTextFromDocument = async (file: File): Promise<string> => {
         
         try {
           // Enhanced Tesseract configuration with proper typing
-          const result = await Tesseract.recognize(
-            imageUrl,
-            'eng', // English language
-            { 
-              logger: progress => {
-                console.log('OCR Progress:', progress);
-              },
-              // Use proper Tesseract.js configuration options
-              tessedit_create_hocr: '0',
-              tessedit_create_tsv: '0',
-              preserve_interword_spaces: '1',
-              tessjs_create_box: '0'
-            }
-          );
+          const result = await startOCR(imageUrl);
           
           URL.revokeObjectURL(imageUrl); // Clean up
           
@@ -281,5 +267,35 @@ export const processConsultationDocument = async (file: File, consultation: Part
       ...consultation,
       status: 'error',
     };
+  }
+};
+
+// Fixed Tesseract options to use supported properties only
+const startOCR = async (image) => {
+  try {
+    const worker = await createWorker({
+      logger: progress => {
+        console.log('OCR Progress:', progress);
+      }
+    });
+    
+    // Configure Tesseract for better medical document recognition
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    
+    // Set parameters for better recognition
+    await worker.setParameters({
+      tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz., -+/:;%()[]{}',
+      tessjs_create_pdf: '1',
+      tessjs_create_tsv: '1'
+    });
+    
+    const { data } = await worker.recognize(image);
+    await worker.terminate();
+    
+    return data;
+  } catch (error) {
+    console.error('OCR Error:', error);
+    return null;
   }
 };
