@@ -1,6 +1,7 @@
 import { Consultation } from "@/types/consultations";
 import { logActivity } from "@/services/securityService";
 import Tesseract from 'tesseract.js';
+import { createWorker } from 'tesseract.js';
 
 // Enhanced OCR function with improved configuration
 export const extractTextFromDocument = async (file: File): Promise<string> => {
