@@ -8,12 +8,8 @@ import { createWorker } from 'tesseract.js';
  */
 export const performOCR = async (image: string): Promise<{ text: string } | null> => {
   try {
-    // Create a worker with default settings
-    const worker = await createWorker();
-    
-    // Configure the worker with English language
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
+    // Create a worker and initialize it with English language
+    const worker = await createWorker('eng');
     
     // Perform the actual recognition
     const result = await worker.recognize(image);
