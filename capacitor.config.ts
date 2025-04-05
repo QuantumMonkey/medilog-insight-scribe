@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.40470a235cbb49b5af10ee45028ff41d',
+  appId: 'com.lovable.medilogscribe',
   appName: 'medilog-insight-scribe',
   webDir: 'dist',
   server: {
