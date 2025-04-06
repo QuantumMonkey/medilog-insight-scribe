@@ -47,7 +47,7 @@ const Layout = () => {
             </div>
             <Outlet />
             {isMobile && (
-              <div className="fixed bottom-4 right-4 pb-safe">
+              <div className="fixed bottom-4 right-4">
                 <Button 
                   onClick={handleAddNewRecord}
                   className="rounded-full w-14 h-14 bg-health-blue text-white hover:bg-health-blue/90 shadow-lg"
