@@ -10,7 +10,10 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   android: {
-    backgroundColor: "#FFFFFF"
+    backgroundColor: "#FFFFFF",
+    statusBarStyle: "dark",
+    statusBarBackgroundColor: "#FFFFFF",
+    navigationBarColor: "#FFFFFF"
   },
   ios: {
     backgroundColor: "#FFFFFF"

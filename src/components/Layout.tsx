@@ -4,7 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Sidebar from './Sidebar';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Menu } from "lucide-react";
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Layout = () => {
@@ -17,12 +17,24 @@ const Layout = () => {
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background pt-safe">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
           <div className="container p-4 max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold">MediLog</h1>
+              <div className="flex items-center">
+                {isMobile && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="mr-2"
+                    onClick={() => document.querySelector('[data-sidebar="trigger"]')?.dispatchEvent(new Event('click'))}
+                  >
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                )}
+                <h1 className="text-2xl font-bold">MediLog</h1>
+              </div>
               {!isMobile && (
                 <Button 
                   onClick={handleAddNewRecord}
