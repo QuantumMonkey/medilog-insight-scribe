@@ -13,7 +13,8 @@ const config: CapacitorConfig = {
     backgroundColor: "#FFFFFF",
     statusBarStyle: "dark",
     statusBarBackgroundColor: "#FFFFFF",
-    navigationBarColor: "#FFFFFF"
+    navigationBarColor: "#FFFFFF",
+    translucent: true // Make status bar translucent
   },
   ios: {
     backgroundColor: "#FFFFFF"

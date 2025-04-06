@@ -17,9 +17,9 @@ const Layout = () => {
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background pt-safe">
+      <div className="min-h-screen flex w-full bg-background">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pt-safe">
           <div className="container p-4 max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -47,7 +47,7 @@ const Layout = () => {
             </div>
             <Outlet />
             {isMobile && (
-              <div className="fixed bottom-4 right-4">
+              <div className="fixed bottom-4 right-4 pb-safe">
                 <Button 
                   onClick={handleAddNewRecord}
                   className="rounded-full w-14 h-14 bg-health-blue text-white hover:bg-health-blue/90 shadow-lg"

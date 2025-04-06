@@ -24,7 +24,7 @@ const App = () => {
     // Add viewport meta tag for mobile devices with notches
     const meta = document.createElement('meta');
     meta.name = 'viewport';
-    meta.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
+    meta.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no';
     document.getElementsByTagName('head')[0].appendChild(meta);
   }, []);
 
