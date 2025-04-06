@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'medilog-insight-scribe',
   webDir: 'dist',
   server: {
-    url: "https://40470a23-5cbb-49b5-af10-ee45028ff41d.lovableproject.com?forceHideBadge=true",
+    androidScheme: 'https',
     cleartext: true
   },
   android: {
