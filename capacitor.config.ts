@@ -8,20 +8,14 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     cleartext: true
-  },
-  android: {
-    backgroundColor: "#FFFFFF",
-    statusBarStyle: "dark",
-    statusBarBackgroundColor: "#FFFFFF",
-    navigationBarColor: "#FFFFFF"
-  },
-  ios: {
-    backgroundColor: "#FFFFFF"
   }
 };
 
 export default {
-  appId: 'com.anubis.medilog', // Already correct
-  appName: 'MediLog', // Already correct
+  appId: 'com.anubis.medilog',
+  appName: 'MediLog',
   webDir: 'dist',
+  server: {
+    androidScheme: 'https'
+  }
 };

@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
-import LoadingSpinner from "./components/ui/LoadingSpinner";
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import "./App.css";
 
 // Lazy-loaded pages
@@ -61,15 +61,21 @@ const App = () => {
         <BrowserRouter>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
+              
+            // In App.tsx (modified Route element)
               <Route 
                 path="/" 
                 element={
                   <Layout 
                     isMobileSidebarOpen={isMobileSidebarOpen}
                     onMobileSidebarToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                  />
+                  >
+                    {/* Empty fragment as children */}
+                    <></>
+                  </Layout>
                 }
               >
+
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/reports" element={<HealthReports />} />

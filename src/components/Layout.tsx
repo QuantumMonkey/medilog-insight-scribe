@@ -1,11 +1,21 @@
-import { Sidebar } from "./Sidebar"; // Your existing sidebar component
+import Sidebar from "./Sidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-const Layout = () => {
+interface LayoutProps {
+  isMobileSidebarOpen?: boolean;
+  onMobileSidebarToggle?: () => void;
+  children: React.ReactNode;
+}
+
+const Layout = ({
+  isMobileSidebarOpen = true,
+  onMobileSidebarToggle = () => {},
+  children
+}: LayoutProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   
@@ -15,24 +25,21 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      {/* Mobile Toggle Button (NEW) */}
       {isMobile && (
         <button
           className="fixed z-50 top-4 left-4 p-2 rounded-lg bg-white shadow-lg"
-          onClick={() => document.querySelector('[data-sidebar="trigger"]')?.click()}
+          onClick={onMobileSidebarToggle}
         >
           <Menu className="h-5 w-5" />
         </button>
       )}
 
-      {/* Your Existing Sidebar (now with mobile-aware classes) */}
       <Sidebar className={cn(
         isMobile ? "fixed z-40" : "relative",
         "transition-transform duration-300",
-        // Mobile state controlled by SidebarProvider
+        isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )} />
 
-      {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="container p-4 max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4">

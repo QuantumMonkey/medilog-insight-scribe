@@ -1,3 +1,7 @@
+interface SidebarProps {
+  className?: string;
+}
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -46,7 +50,7 @@ const Sidebar = ({ className }: { className?: string }) => {
         {/* Mobile close button (NEW) */}
         <button 
           className="md:hidden absolute top-4 right-4 p-1 rounded-full hover:bg-accent"
-          onClick={() => document.querySelector('[data-sidebar="trigger"]')?.click()}
+          onClick={() => (document.querySelector('[data-sidebar="trigger"]') as HTMLElement)?.click()}
         >
           <X className="h-5 w-5" />
         </button>
