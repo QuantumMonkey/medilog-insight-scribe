@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,13 +10,96 @@ import { FileText, Calendar, User, Building, PlusCircle, Search, Filter, Downloa
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { extractTextFromDocument, extractStructuredData } from '@/utils/documentProcessor';
 
 const HealthReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeReport, setActiveReport] = useState(sampleReports[0]);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [extractedData, setExtractedData] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [knownDoctors, setKnownDoctors] = useState<string[]>([]);
+  const [knownFacilities, setKnownFacilities] = useState<string[]>([]);
+  const [reportFormData, setReportFormData] = useState({
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    doctor: '',
+    facility: '',
+  });
+  
   const { toast } = useToast();
   
+  // Extract known doctors and facilities from existing reports
+  useEffect(() => {
+    const doctors = Array.from(new Set(sampleReports.map(report => report.doctor)));
+    const facilities = Array.from(new Set(sampleReports.map(report => report.facility)));
+    
+    setKnownDoctors(['Self', ...doctors]);
+    setKnownFacilities(['Self', ...facilities]);
+  }, []);
+  
+  const handleInputChange = (field: string, value: string) => {
+    setReportFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadedFile(file);
+    setIsUploading(true);
+    
+    try {
+      // Extract text from document
+      const extractedText = await extractTextFromDocument(file);
+      
+      // Extract structured data
+      const structuredData = extractStructuredData(extractedText);
+      setExtractedData(structuredData);
+      
+      // Pre-fill form with extracted data if possible
+      if (structuredData.title) {
+        handleInputChange('title', structuredData.title);
+      }
+      if (structuredData.date) {
+        handleInputChange('date', structuredData.date);
+      }
+      if (structuredData.doctor) {
+        handleInputChange('doctor', structuredData.doctor);
+      }
+      if (structuredData.facility) {
+        handleInputChange('facility', structuredData.facility);
+      }
+      
+      toast({
+        title: "Document processed",
+        description: "Data has been extracted from your document.",
+      });
+    } catch (error) {
+      toast({
+        title: "Processing error",
+        description: "There was an error processing your document.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
   const handleUpload = () => {
+    if (!reportFormData.title || !reportFormData.date) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title and date for your report.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsUploading(true);
     toast({
       title: "Report upload started",
       description: "Your report is being processed.",
@@ -24,10 +107,37 @@ const HealthReports = () => {
     
     // Simulate upload completion after 2 seconds
     setTimeout(() => {
+      // Create new report object with form data and extracted data
+      const newReport = {
+        id: (Math.max(0, ...sampleReports.map(r => parseInt(r.id))) + 1).toString(),
+        title: reportFormData.title,
+        date: reportFormData.date,
+        doctor: reportFormData.doctor || 'Self',
+        facility: reportFormData.facility || 'Self',
+        notes: extractedData?.notes || "No notes available.",
+        metrics: extractedData?.metrics || [],
+        fileUrl: null
+      };
+      
+      // Add to reports (in a real app, would save to database)
+      // For now, we're just simulating success
+      
       toast({
         title: "Report uploaded successfully",
         description: "Your health report has been added to your records.",
       });
+      
+      // Reset form and close dialog
+      setReportFormData({
+        title: '',
+        date: new Date().toISOString().split('T')[0],
+        doctor: '',
+        facility: '',
+      });
+      setUploadedFile(null);
+      setExtractedData(null);
+      setOpenDialog(false);
+      setIsUploading(false);
     }, 2000);
   };
   
@@ -45,45 +155,174 @@ const HealthReports = () => {
           <p className="text-muted-foreground">Upload and manage your health reports</p>
         </div>
         
-        <Dialog>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => setOpenDialog(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Upload New Report
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>Upload Health Report</DialogTitle>
               <DialogDescription>
                 Upload your health report document or enter details manually.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="report-title">Report Title</Label>
-                <Input id="report-title" placeholder="E.g., Annual Physical Examination" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="report-date">Report Date</Label>
-                <Input id="report-date" type="date" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="doctor-name">Doctor's Name</Label>
-                <Input id="doctor-name" placeholder="Dr. Jane Smith" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="facility">Healthcare Facility</Label>
-                <Input id="facility" placeholder="City Hospital" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="file-upload">Upload Document (Optional)</Label>
-                <Input id="file-upload" type="file" />
-              </div>
-            </div>
+            
+            <Tabs defaultValue="upload">
+              <TabsList className="mb-4">
+                <TabsTrigger value="upload">Upload Document</TabsTrigger>
+                <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+                {extractedData && <TabsTrigger value="preview">Extracted Data</TabsTrigger>}
+              </TabsList>
+              
+              <TabsContent value="upload" className="space-y-4">
+                <div className="grid gap-4">
+                  <Label htmlFor="file-upload">Upload Health Report Document</Label>
+                  <Input 
+                    id="file-upload" 
+                    type="file" 
+                    onChange={handleFileChange}
+                    accept=".pdf,.jpg,.jpeg,.png,.txt"
+                    disabled={isUploading}
+                  />
+                  {uploadedFile && (
+                    <div className="text-sm text-muted-foreground">
+                      Uploaded: {uploadedFile.name}
+                    </div>
+                  )}
+                  {isUploading && <p className="text-center text-sm">Processing document...</p>}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="manual" className="space-y-4">
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="report-title">Report Title</Label>
+                    <Input 
+                      id="report-title" 
+                      placeholder="E.g., Annual Physical Examination" 
+                      value={reportFormData.title}
+                      onChange={(e) => handleInputChange('title', e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="report-date">Report Date</Label>
+                    <Input 
+                      id="report-date" 
+                      type="date"
+                      value={reportFormData.date}
+                      onChange={(e) => handleInputChange('date', e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="doctor-name">Doctor's Name</Label>
+                    <Select 
+                      value={reportFormData.doctor} 
+                      onValueChange={(value) => handleInputChange('doctor', value)}
+                    >
+                      <SelectTrigger id="doctor-name">
+                        <SelectValue placeholder="Select or enter doctor's name" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {knownDoctors.map(doctor => (
+                          <SelectItem key={doctor} value={doctor}>
+                            {doctor}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="facility">Healthcare Facility</Label>
+                    <Select 
+                      value={reportFormData.facility} 
+                      onValueChange={(value) => handleInputChange('facility', value)}
+                    >
+                      <SelectTrigger id="facility">
+                        <SelectValue placeholder="Select or enter facility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {knownFacilities.map(facility => (
+                          <SelectItem key={facility} value={facility}>
+                            {facility}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {extractedData && (
+                <TabsContent value="preview" className="space-y-4">
+                  <h3 className="text-md font-semibold">Extracted Information</h3>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Field</TableHead>
+                        <TableHead>Extracted Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(extractedData)
+                        .filter(([key]) => !['metrics', 'notes'].includes(key))
+                        .map(([key, value]) => (
+                          <TableRow key={key}>
+                            <TableCell className="font-medium capitalize">
+                              {key}
+                            </TableCell>
+                            <TableCell>
+                              {typeof value === 'string' ? value : JSON.stringify(value)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                  
+                  {extractedData.metrics && extractedData.metrics.length > 0 && (
+                    <>
+                      <h3 className="text-md font-semibold mt-4">Health Metrics</h3>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Metric</TableHead>
+                            <TableHead>Value</TableHead>
+                            <TableHead>Unit</TableHead>
+                            <TableHead>Normal Range</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {extractedData.metrics.map((metric: any, index: number) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{metric.name}</TableCell>
+                              <TableCell>{metric.value}</TableCell>
+                              <TableCell>{metric.unit}</TableCell>
+                              <TableCell>
+                                {metric.normalRange 
+                                  ? `${metric.normalRange.min} - ${metric.normalRange.max} ${metric.unit}`
+                                  : 'Not specified'
+                                }
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </>
+                  )}
+                </TabsContent>
+              )}
+            </Tabs>
+            
             <DialogFooter>
-              <Button variant="outline">Cancel</Button>
-              <Button onClick={handleUpload}>Upload Report</Button>
+              <Button variant="outline" onClick={() => setOpenDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpload} disabled={isUploading}>
+                {isUploading ? "Uploading..." : "Upload Report"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

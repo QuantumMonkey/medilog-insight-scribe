@@ -16,6 +16,7 @@ export const useMedicationManagement = (initialMedications: Medication[]) => {
     reminderTimes: [],
     reminderEnabled: false
   });
+  const [newReminderTime, setNewReminderTime] = useState<string>("8:00 AM");
   const { toast } = useToast();
 
   const handleAddMedication = () => {
@@ -40,7 +41,7 @@ export const useMedicationManagement = (initialMedications: Medication[]) => {
       endDate: newMedication.endDate,
       isActive: true,
       notes: newMedication.notes || "No notes provided.",
-      reminderTimes: newMedication.reminderEnabled ? ["8:00 AM"] : []
+      reminderTimes: newMedication.reminderEnabled ? [...(newMedication.reminderTimes || [])] : []
     };
     
     // Add to medications list
@@ -52,7 +53,8 @@ export const useMedicationManagement = (initialMedications: Medication[]) => {
     setNewMedication({
       isActive: true,
       startDate: new Date().toISOString().split('T')[0],
-      reminderEnabled: false
+      reminderEnabled: false,
+      reminderTimes: []
     });
     
     toast({
@@ -105,6 +107,64 @@ export const useMedicationManagement = (initialMedications: Medication[]) => {
     toast({
       title: "Reminder set",
       description: `You will receive reminders for ${selectedMedication.name}.`,
+    });
+  };
+  
+  const handleAddReminderTime = (time: string) => {
+    if (!selectedMedication) return;
+    
+    // Don't add if time already exists
+    if (selectedMedication.reminderTimes?.includes(time)) {
+      toast({
+        title: "Reminder already exists",
+        description: `A reminder for ${time} already exists.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Add new reminder time
+    const updatedReminderTimes = [...(selectedMedication.reminderTimes || []), time];
+    
+    const updatedMedication = {
+      ...selectedMedication,
+      reminderTimes: updatedReminderTimes
+    };
+    
+    const updatedMedications = medications.map(med => 
+      med.id === selectedMedication.id ? updatedMedication : med
+    );
+    
+    setMedications(updatedMedications);
+    setSelectedMedication(updatedMedication);
+    
+    toast({
+      title: "Reminder added",
+      description: `Added reminder at ${time} for ${selectedMedication.name}.`,
+    });
+  };
+  
+  const handleRemoveReminderTime = (timeToRemove: string) => {
+    if (!selectedMedication) return;
+    
+    const updatedReminderTimes = (selectedMedication.reminderTimes || [])
+      .filter(time => time !== timeToRemove);
+    
+    const updatedMedication = {
+      ...selectedMedication,
+      reminderTimes: updatedReminderTimes
+    };
+    
+    const updatedMedications = medications.map(med => 
+      med.id === selectedMedication.id ? updatedMedication : med
+    );
+    
+    setMedications(updatedMedications);
+    setSelectedMedication(updatedMedication);
+    
+    toast({
+      title: "Reminder removed",
+      description: `Removed reminder at ${timeToRemove} for ${selectedMedication.name}.`,
     });
   };
   
@@ -167,6 +227,12 @@ export const useMedicationManagement = (initialMedications: Medication[]) => {
   const updateNewMedication = (field: string, value: any) => {
     if (field === 'reset') {
       setNewMedication(value);
+    } else if (field === 'addReminderTime') {
+      const updatedTimes = [...(newMedication.reminderTimes || []), value];
+      setNewMedication(prev => ({ ...prev, reminderTimes: updatedTimes }));
+    } else if (field === 'removeReminderTime') {
+      const updatedTimes = (newMedication.reminderTimes || []).filter(time => time !== value);
+      setNewMedication(prev => ({ ...prev, reminderTimes: updatedTimes }));
     } else {
       setNewMedication(prev => ({ ...prev, [field]: value }));
     }
@@ -177,11 +243,15 @@ export const useMedicationManagement = (initialMedications: Medication[]) => {
     selectedMedication,
     showPrintDialog,
     newMedication,
+    newReminderTime,
+    setNewReminderTime,
     setSelectedMedication,
     setShowPrintDialog,
     handleAddMedication,
     handleStatusToggle,
     handleSetReminder,
+    handleAddReminderTime,
+    handleRemoveReminderTime,
     handlePrintInformation,
     handleSavePDF,
     handlePrintPDF,

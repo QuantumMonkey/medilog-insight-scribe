@@ -19,7 +19,7 @@ const Layout = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto pt-safe">
+        <main className="flex-1 overflow-y-auto">
           <div className="container p-4 max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
