@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { sampleReports } from '@/data/sampleData';
-import { HealthReport } from '@/types/health';
+import React from 'react';
+import { useHealthReports } from '@/hooks/useHealthReports';
 
 import SearchBar from '@/components/health-reports/SearchBar';
 import ReportsList from '@/components/health-reports/ReportsList';
@@ -9,30 +8,16 @@ import ReportDetail from '@/components/health-reports/ReportDetail';
 import UploadDialog from '@/components/health-reports/UploadDialog';
 
 const HealthReports = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeReport, setActiveReport] = useState<HealthReport | null>(sampleReports[0] || null);
-  const [knownDoctors, setKnownDoctors] = useState<string[]>([]);
-  const [knownFacilities, setKnownFacilities] = useState<string[]>([]);
-  
-  useEffect(() => {
-    // Extract unique doctors and facilities from the reports
-    const doctors = Array.from(new Set(sampleReports.map(report => report.doctor)));
-    const facilities = Array.from(new Set(sampleReports.map(report => report.facility)));
-    
-    setKnownDoctors(['Self', ...doctors]);
-    setKnownFacilities(['Self', ...facilities]);
-  }, []);
-  
-  const handleUploadComplete = () => {
-    // In a real app, we would refresh the reports list here
-    // For now, we'll just keep using the sample data
-  };
-  
-  const filteredReports = sampleReports.filter(report => 
-    report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.doctor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.facility.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const {
+    searchTerm,
+    setSearchTerm,
+    activeReport,
+    setActiveReport,
+    knownDoctors,
+    knownFacilities,
+    handleUploadComplete,
+    filteredReports
+  } = useHealthReports();
   
   return (
     <div className="space-y-6">
