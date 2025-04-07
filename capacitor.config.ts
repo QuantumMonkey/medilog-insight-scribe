@@ -14,8 +14,5 @@ const config: CapacitorConfig = {
 export default {
   appId: 'com.anubis.medilog',
   appName: 'MediLog',
-  webDir: 'dist',
-  server: {
-    androidScheme: 'https'
-  }
+  webDir: 'dist'
 };

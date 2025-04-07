@@ -22,18 +22,15 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Mobile sidebar state
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const location = useLocation();
 
-  // Auto-close sidebar on mobile navigation
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) setIsMobileSidebarOpen(true);
-      else setIsMobileSidebarOpen(false);
+      setIsMobileSidebarOpen(window.innerWidth >= 768);
     };
 
-    handleResize(); // Initialize
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -44,7 +41,6 @@ const App = () => {
     }
   }, [location]);
 
-  // Viewport meta tag for mobile
   useEffect(() => {
     const meta = document.createElement('meta');
     meta.name = 'viewport';
@@ -61,21 +57,16 @@ const App = () => {
         <BrowserRouter>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
-              
-            // In App.tsx (modified Route element)
+              {/* Main layout route */}
               <Route 
-                path="/" 
                 element={
                   <Layout 
                     isMobileSidebarOpen={isMobileSidebarOpen}
                     onMobileSidebarToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                  >
-                    {/* Empty fragment as children */}
-                    <></>
-                  </Layout>
+                  />
                 }
               >
-
+                {/* Redirect root to dashboard */}
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/reports" element={<HealthReports />} />
@@ -86,6 +77,7 @@ const App = () => {
                 <Route path="/assistant" element={<HealthAssistant />} />
                 <Route path="/timeline" element={<Timeline />} />
               </Route>
+              {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

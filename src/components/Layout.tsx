@@ -8,13 +8,11 @@ import { cn } from "@/lib/utils";
 interface LayoutProps {
   isMobileSidebarOpen?: boolean;
   onMobileSidebarToggle?: () => void;
-  children: React.ReactNode;
 }
 
 const Layout = ({
   isMobileSidebarOpen = true,
   onMobileSidebarToggle = () => {},
-  children
 }: LayoutProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -42,6 +40,7 @@ const Layout = ({
 
       <main className="flex-1 overflow-y-auto">
         <div className="container p-4 max-w-7xl mx-auto">
+          {/* Header Section */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold">MediLog</h1>
@@ -56,7 +55,11 @@ const Layout = ({
               </Button>
             )}
           </div>
+
+          {/* Critical: Single Outlet for rendering child routes */}
           <Outlet />
+
+          {/* Mobile Floating Button */}
           {isMobile && (
             <div className="fixed bottom-4 right-4">
               <Button 
