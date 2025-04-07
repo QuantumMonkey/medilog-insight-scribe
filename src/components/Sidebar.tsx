@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -17,7 +16,6 @@ import {
 import { 
   LayoutDashboard, 
   FileText, 
-  PlusCircle, 
   ActivitySquare, 
   Pill, 
   BarChartBig, 
@@ -25,21 +23,35 @@ import {
   Settings, 
   HelpCircle,
   Menu,
-  ClipboardList
+  ClipboardList,
+  X
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const Sidebar = () => {
+const Sidebar = ({ className }: { className?: string }) => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <SidebarContainer>
+    <SidebarContainer className={cn(
+      "fixed md:relative h-screen transition-transform duration-300 z-40",
+      "md:translate-x-0", // Always visible on tablet/desktop
+      className // Allows Layout to control mobile state
+    )}>
       <SidebarHeader className="flex items-center px-4 py-2">
-        <SidebarTrigger className="mr-2">
+        <SidebarTrigger className="mr-2" data-sidebar="trigger">
           <Menu className="h-5 w-5" />
         </SidebarTrigger>
         <span className="text-xl font-bold">MediLog</span>
+        {/* Mobile close button (NEW) */}
+        <button 
+          className="md:hidden absolute top-4 right-4 p-1 rounded-full hover:bg-accent"
+          onClick={() => document.querySelector('[data-sidebar="trigger"]')?.click()}
+        >
+          <X className="h-5 w-5" />
+        </button>
       </SidebarHeader>
+      
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>

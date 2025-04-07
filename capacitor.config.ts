@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.lovable.medilogscribe',
+  appId: 'com.anubis.medilog',
   appName: 'MediLog',
   webDir: 'dist',
   server: {
@@ -20,4 +20,8 @@ const config: CapacitorConfig = {
   }
 };
 
-export default config;
+export default {
+  appId: 'com.anubis.medilog', // Already correct
+  appName: 'MediLog', // Already correct
+  webDir: 'dist',
+};
