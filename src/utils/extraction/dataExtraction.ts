@@ -5,6 +5,66 @@
  * @returns Object containing extracted structured data
  */
 export const extractStructuredData = (text: string) => {
+  // Extract title (first line or "Medical Report" as fallback)
+  const extractTitle = (text: string) => {
+    const firstLine = text.split('\n')[0].trim();
+    return firstLine || "Medical Report";
+  };
+  
+  // Extract date from document text
+  const extractDate = (text: string) => {
+    const datePatterns = [
+      /date:?\s*(\d{4}-\d{1,2}-\d{1,2})/i,
+      /date:?\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i,
+      /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{1,2},? \d{4}/i
+    ];
+    
+    for (const pattern of datePatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    // Default to current date if no date found
+    return new Date().toISOString().split('T')[0];
+  };
+  
+  // Extract doctor name
+  const extractDoctor = (text: string) => {
+    const doctorPatterns = [
+      /dr\.?\s*([a-z\s\.]+)(?:,|\.|\n)/i,
+      /doctor:?\s*([a-z\s\.]+)(?:,|\.|\n)/i,
+      /physician:?\s*([a-z\s\.]+)(?:,|\.|\n)/i
+    ];
+    
+    for (const pattern of doctorPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    return '';
+  };
+  
+  // Extract facility name
+  const extractFacility = (text: string) => {
+    const facilityPatterns = [
+      /(?:hospital|clinic|center|facility):?\s*([a-z\s\.]+)(?:,|\.|\n)/i,
+      /(?:at|by)\s+([a-z\s\.]+(?:hospital|clinic|center|medical))(?:,|\.|\n)/i
+    ];
+    
+    for (const pattern of facilityPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    return '';
+  };
+
   // Extract diagnosis codes (ICD-10 format)
   const extractDiagnosisCodes = (text: string) => {
     // Improved regex for ICD-10 codes (covers more formats)
@@ -112,13 +172,30 @@ export const extractStructuredData = (text: string) => {
     
     return metrics;
   };
+  
+  // Extract notes
+  const extractNotes = (text: string) => {
+    // Get some portion of the text as notes if it's long enough
+    if (text.length > 100) {
+      const sections = text.split('\n').filter(s => s.length > 20);
+      if (sections.length > 0) {
+        return sections[0];
+      }
+    }
+    return "No detailed notes available.";
+  };
 
   // Return all extracted data
   return {
+    title: extractTitle(text),
+    date: extractDate(text),
+    doctor: extractDoctor(text),
+    facility: extractFacility(text),
     diagnosisCodes: extractDiagnosisCodes(text),
     medications: extractMedications(text),
     followUpDate: extractFollowUpDate(text),
     recommendations: extractRecommendations(text),
-    additionalMetrics: extractAdditionalMetrics(text)
+    additionalMetrics: extractAdditionalMetrics(text),
+    notes: extractNotes(text)
   };
 };

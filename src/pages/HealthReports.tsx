@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { sampleReports } from '@/data/sampleData';
 import { HealthReport } from '@/types/health';
@@ -14,6 +15,7 @@ const HealthReports = () => {
   const [knownFacilities, setKnownFacilities] = useState<string[]>([]);
   
   useEffect(() => {
+    // Extract unique doctors and facilities from the reports
     const doctors = Array.from(new Set(sampleReports.map(report => report.doctor)));
     const facilities = Array.from(new Set(sampleReports.map(report => report.facility)));
     

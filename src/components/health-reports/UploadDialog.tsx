@@ -51,16 +51,16 @@ const UploadDialog: React.FC<UploadDialogProps> = ({ knownDoctors, knownFaciliti
       setExtractedData(structuredData);
       
       // Pre-fill form with extracted data if possible
-      if (structuredData && structuredData.title) {
+      if (structuredData?.title) {
         handleInputChange('title', structuredData.title);
       }
-      if (structuredData && structuredData.date) {
+      if (structuredData?.date) {
         handleInputChange('date', structuredData.date);
       }
-      if (structuredData && structuredData.doctor) {
+      if (structuredData?.doctor) {
         handleInputChange('doctor', structuredData.doctor);
       }
-      if (structuredData && structuredData.facility) {
+      if (structuredData?.facility) {
         handleInputChange('facility', structuredData.facility);
       }
       
@@ -248,7 +248,7 @@ const UploadDialog: React.FC<UploadDialogProps> = ({ knownDoctors, knownFaciliti
                 </TableHeader>
                 <TableBody>
                   {Object.entries(extractedData)
-                    .filter(([key]) => !['metrics', 'notes'].includes(key))
+                    .filter(([key]) => !['metrics', 'notes', 'additionalMetrics', 'diagnosisCodes', 'medications', 'recommendations'].includes(key))
                     .map(([key, value]) => (
                       <TableRow key={key}>
                         <TableCell className="font-medium capitalize">
@@ -262,7 +262,7 @@ const UploadDialog: React.FC<UploadDialogProps> = ({ knownDoctors, knownFaciliti
                 </TableBody>
               </Table>
               
-              {extractedData.metrics && extractedData.metrics.length > 0 && (
+              {extractedData.additionalMetrics && Object.keys(extractedData.additionalMetrics).length > 0 && (
                 <>
                   <h3 className="text-md font-semibold mt-4">Health Metrics</h3>
                   <Table>
@@ -270,26 +270,52 @@ const UploadDialog: React.FC<UploadDialogProps> = ({ knownDoctors, knownFaciliti
                       <TableRow>
                         <TableHead>Metric</TableHead>
                         <TableHead>Value</TableHead>
-                        <TableHead>Unit</TableHead>
-                        <TableHead>Normal Range</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {extractedData.metrics.map((metric: any, index: number) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{metric.name}</TableCell>
-                          <TableCell>{metric.value}</TableCell>
-                          <TableCell>{metric.unit}</TableCell>
-                          <TableCell>
-                            {metric.normalRange 
-                              ? `${metric.normalRange.min} - ${metric.normalRange.max} ${metric.unit}`
-                              : 'Not specified'
-                            }
-                          </TableCell>
+                      {Object.entries(extractedData.additionalMetrics).map(([key, value]) => (
+                        <TableRow key={key}>
+                          <TableCell className="font-medium">{key}</TableCell>
+                          <TableCell>{value as string}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                </>
+              )}
+              
+              {extractedData.diagnosisCodes && extractedData.diagnosisCodes.length > 0 && (
+                <>
+                  <h3 className="text-md font-semibold mt-4">Diagnosis Codes</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {extractedData.diagnosisCodes.map((code: string, index: number) => (
+                      <div key={index} className="bg-primary/10 text-primary px-2 py-1 rounded">
+                        {code}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {extractedData.medications && extractedData.medications.length > 0 && (
+                <>
+                  <h3 className="text-md font-semibold mt-4">Medications</h3>
+                  <ul className="list-disc pl-5">
+                    {extractedData.medications.map((med: string, index: number) => (
+                      <li key={index}>{med}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              
+              {extractedData.recommendations && extractedData.recommendations.length > 0 && (
+                <>
+                  <h3 className="text-md font-semibold mt-4">Recommendations</h3>
+                  <ul className="list-disc pl-5">
+                    {extractedData.recommendations.map((rec: string, index: number) => (
+                      <li key={index}>{rec}</li>
+                    ))}
+                  </ul>
                 </>
               )}
             </TabsContent>
