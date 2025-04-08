@@ -1,3 +1,4 @@
+
 import Sidebar from "./Sidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,25 +24,25 @@ const Layout = ({
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      {isMobile && (
-        <button
-          className="fixed z-50 top-4 left-4 p-2 rounded-lg bg-white shadow-lg"
-          onClick={onMobileSidebarToggle}
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      )}
+      {/* Always show toggle button, but style it differently based on screen size */}
+      <button
+        className="fixed z-50 top-4 left-4 p-2 rounded-lg bg-white shadow-lg hover:bg-gray-100"
+        onClick={onMobileSidebarToggle}
+        aria-label="Toggle sidebar"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
 
       <Sidebar className={cn(
-        isMobile ? "fixed z-40" : "relative",
-        "transition-transform duration-300",
+        "fixed z-40 transition-transform duration-300",
+        isMobile ? "" : "md:relative",
         isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )} />
 
       <main className="flex-1 overflow-y-auto">
         <div className="container p-4 max-w-7xl mx-auto">
-          {/* Header Section */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Header Section - push content down to avoid overlap with menu button */}
+          <div className="flex items-center justify-between mb-4 pt-8 md:pt-0">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold">MediLog</h1>
             </div>
@@ -56,7 +57,6 @@ const Layout = ({
             )}
           </div>
 
-          {/* Critical: Single Outlet for rendering child routes */}
           <Outlet />
 
           {/* Mobile Floating Button */}
