@@ -30,7 +30,7 @@ const Sidebar = ({ className, hideMobileCloseButton = false }: SidebarProps) => 
     )}>
       <div className="flex flex-col h-full">
         {/* Header - Center align MediLog title with proper spacing */}
-        <div className="flex items-center justify-center py-4 border-b px-6">
+        <div className="flex items-center justify-center py-4 border-b px-10">
           <span className="text-xl font-bold">MediLog</span>
         </div>
         

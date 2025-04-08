@@ -1,44 +1,27 @@
 
-import { useState, useEffect, useCallback } from "react";
-
-// Default breakpoint for mobile devices
-const MOBILE_BREAKPOINT = 768;
+import { useEffect, useState } from "react";
 
 /**
- * Hook to detect if the current viewport is mobile-sized
- * @param customBreakpoint Optional custom breakpoint in pixels
- * @returns Boolean indicating if the viewport is mobile-sized
+ * Custom hook to detect if the current device is mobile
+ * @returns boolean indicating if the current device is mobile
  */
-export function useIsMobile(customBreakpoint?: number) {
-  const breakpoint = customBreakpoint || MOBILE_BREAKPOINT;
-  
-  // Function to determine if window width is below breakpoint
-  const checkIsMobile = useCallback(() => {
-    return window.innerWidth < breakpoint;
-  }, [breakpoint]);
-  
-  // Initialize state with current window size
-  const [isMobile, setIsMobile] = useState<boolean>(() => {
-    // Use a default value for SSR environments
-    if (typeof window === 'undefined') return false;
-    return checkIsMobile();
-  });
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
 
   useEffect(() => {
-    // Update state on mount
-    setIsMobile(checkIsMobile());
+    if (typeof window === "undefined") return;
     
-    // Handler for window resize events
     const handleResize = () => {
-      setIsMobile(checkIsMobile());
+      setIsMobile(window.innerWidth < 768);
     };
     
-    // Add event listener
     window.addEventListener("resize", handleResize);
+    handleResize();
     
-    // Clean up event listener
     return () => window.removeEventListener("resize", handleResize);
-  }, [checkIsMobile]);
+  }, []);
 
   return isMobile;
 }

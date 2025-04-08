@@ -17,7 +17,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
     <div
       className={cn(
         "flex h-14 items-center border-b",
-        isCollapsed ? "justify-center px-2" : "justify-center px-6", // Center alignment with more left padding
+        isCollapsed ? "justify-center px-3" : "justify-center px-10", // Increased left padding
         className
       )}
     >
