@@ -54,18 +54,20 @@ const Layout = ({
       <main className="flex-1 overflow-y-auto pt-[10px]">
         <div className="container p-4 max-w-7xl mx-auto">
           {/* Header Section - push content down to avoid overlap with menu button */}
-          <div className="flex items-center justify-between mb-4 pt-8 md:pt-0">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold">MediLog</h1>
-            </div>
+          <div className="flex items-center justify-center mb-4 pt-8 md:pt-0">
+            <h1 className="text-2xl font-bold">MediLog</h1>
+            
+            {/* Move the button to a separate div for better alignment */}
             {!isMobile && (
-              <Button 
-                onClick={handleAddNewRecord}
-                className="bg-health-blue text-white hover:bg-health-blue/90"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add New Record
-              </Button>
+              <div className="absolute right-4">
+                <Button 
+                  onClick={handleAddNewRecord}
+                  className="bg-health-blue text-white hover:bg-health-blue/90"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add New Record
+                </Button>
+              </div>
             )}
           </div>
 

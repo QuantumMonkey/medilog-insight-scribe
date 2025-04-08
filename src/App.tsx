@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import DatabaseInitializer from './components/DatabaseInitializer';
 import "./App.css";
 
 // Lazy-loaded pages
@@ -43,34 +44,36 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            {/* Main layout route */}
-            <Route 
-              element={
-                <Layout 
-                  isMobileSidebarOpen={isMobileSidebarOpen}
-                  onMobileSidebarToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                />
-              }
-            >
-              {/* Redirect root to dashboard */}
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/reports" element={<HealthReports />} />
-              <Route path="/consultations" element={<Consultations />} />
-              <Route path="/vitals" element={<VitalMetrics />} />
-              <Route path="/medications" element={<Medications />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/assistant" element={<HealthAssistant />} />
-              <Route path="/timeline" element={<Timeline />} />
-            </Route>
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+        <DatabaseInitializer>
+          <Toaster />
+          <Sonner />
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              {/* Main layout route */}
+              <Route 
+                element={
+                  <Layout 
+                    isMobileSidebarOpen={isMobileSidebarOpen}
+                    onMobileSidebarToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+                  />
+                }
+              >
+                {/* Redirect root to dashboard */}
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/reports" element={<HealthReports />} />
+                <Route path="/consultations" element={<Consultations />} />
+                <Route path="/vitals" element={<VitalMetrics />} />
+                <Route path="/medications" element={<Medications />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/assistant" element={<HealthAssistant />} />
+                <Route path="/timeline" element={<Timeline />} />
+              </Route>
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </DatabaseInitializer>
       </TooltipProvider>
     </QueryClientProvider>
   );
