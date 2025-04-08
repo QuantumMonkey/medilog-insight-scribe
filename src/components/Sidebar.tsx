@@ -29,8 +29,8 @@ const Sidebar = ({ className, hideMobileCloseButton = false }: SidebarProps) => 
       className
     )}>
       <div className="flex flex-col h-full">
-        {/* Header - Add pl-12 to create space for the toggle button */}
-        <div className="flex items-center justify-between px-4 py-4 border-b pl-12">
+        {/* Header - Center align MediLog title with proper spacing */}
+        <div className="flex items-center justify-center py-4 border-b px-6">
           <span className="text-xl font-bold">MediLog</span>
         </div>
         
