@@ -11,8 +11,4 @@ const config: CapacitorConfig = {
   }
 };
 
-export default {
-  appId: 'com.anubis.medilog',
-  appName: 'MediLog',
-  webDir: 'dist'
-};
+export default config;
