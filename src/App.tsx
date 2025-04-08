@@ -26,26 +26,9 @@ const App = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const location = useLocation();
 
-  useEffect(() => {
-    const handleResize = () => {
-      // Only auto-open sidebar on larger screens
-      if (window.innerWidth >= 768) {
-        setIsMobileSidebarOpen(true);
-      } else {
-        setIsMobileSidebarOpen(false);
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   // Close mobile sidebar when location changes
   useEffect(() => {
-    if (window.innerWidth < 768) {
-      setIsMobileSidebarOpen(false);
-    }
+    setIsMobileSidebarOpen(false);
   }, [location]);
 
   // Set proper viewport meta tag

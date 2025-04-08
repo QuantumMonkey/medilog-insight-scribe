@@ -1,20 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { X } from 'lucide-react';
 import {
-  Sidebar as SidebarContainer,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter
-} from "@/components/ui/sidebar";
-import { 
   LayoutDashboard, 
   FileText, 
   ActivitySquare, 
@@ -29,28 +16,22 @@ import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   className?: string;
+  hideMobileCloseButton?: boolean;
 }
 
-const Sidebar = ({ className }: SidebarProps) => {
+const Sidebar = ({ className, hideMobileCloseButton = false }: SidebarProps) => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className={cn(
-      "h-screen bg-white border-r",
+      "h-screen bg-white border-r w-[280px]",
       className
     )}>
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b">
           <span className="text-xl font-bold">MediLog</span>
-          <button 
-            className="md:hidden p-1 rounded-full hover:bg-gray-100"
-            aria-label="Close sidebar"
-            onClick={() => document.querySelector('.fixed.z-50')?.dispatchEvent(new MouseEvent('click'))}
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
         
         {/* Navigation */}

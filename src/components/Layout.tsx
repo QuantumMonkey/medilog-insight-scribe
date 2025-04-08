@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface LayoutProps {
   isMobileSidebarOpen?: boolean;
@@ -12,7 +13,7 @@ interface LayoutProps {
 }
 
 const Layout = ({
-  isMobileSidebarOpen = true,
+  isMobileSidebarOpen = false,
   onMobileSidebarToggle = () => {},
 }: LayoutProps) => {
   const isMobile = useIsMobile();
@@ -24,7 +25,7 @@ const Layout = ({
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      {/* Always show toggle button, but style it differently based on screen size */}
+      {/* Toggle button - always visible */}
       <button
         className="fixed z-50 top-4 left-4 p-2 rounded-lg bg-white shadow-lg hover:bg-gray-100"
         onClick={onMobileSidebarToggle}
@@ -33,13 +34,24 @@ const Layout = ({
         <Menu className="h-5 w-5" />
       </button>
 
-      <Sidebar className={cn(
-        "fixed z-40 transition-transform duration-300",
-        isMobile ? "" : "md:relative",
-        isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )} />
+      {/* Sidebar with overlay when mobile */}
+      <div 
+        className={cn(
+          "fixed inset-0 bg-black/50 z-40 transition-opacity",
+          isMobileSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={onMobileSidebarToggle}
+      />
 
-      <main className="flex-1 overflow-y-auto">
+      <Sidebar 
+        className={cn(
+          "fixed z-40 h-full transition-transform duration-300",
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+        hideMobileCloseButton={true}
+      />
+
+      <main className="flex-1 overflow-y-auto pt-[10px]">
         <div className="container p-4 max-w-7xl mx-auto">
           {/* Header Section - push content down to avoid overlap with menu button */}
           <div className="flex items-center justify-between mb-4 pt-8 md:pt-0">
